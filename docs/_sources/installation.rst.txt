@@ -1,0 +1,8 @@
+============
+Installation
+============
+
+This is available for installation on PyPI. This also sets up the Pytest plugin, so any project using ``pytest`` will be able to use this project's autoreloader in test runs through one configuration flag::
+
+    pip install mighty_patcher
+

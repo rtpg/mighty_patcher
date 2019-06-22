@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Usage (Pytest plugin) &#8212; Mighty Patcher  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Documentation" href="api.html" />
+    <link rel="prev" title="Usage" href="usage.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="usage-pytest-plugin">
+<h1>Usage (Pytest plugin)<a class="headerlink" href="#usage-pytest-plugin" title="Permalink to this headline">¶</a></h1>
+<p>Once you install this package you can use it as a pytest plugin.</p>
+<p>The following options are made available when running pytest:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--reload-loop</span></code></p></li>
+</ul>
+<p>Running this flag starts an autoreloader when you start your tests. When you reach a test failure, you will be dropped into pdb to examine the error.</p>
+<p>While you are in <code class="docutils literal notranslate"><span class="pre">pdb</span></code> mode, you can edit your project files and the autoreloader will install the new code. After you are confident that you have fixed the issue, you can leave the debugger with the <code class="docutils literal notranslate"><span class="pre">c</span></code> (continue) command and the test will be run again.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--reload-dir</span></code></p></li>
+</ul>
+<p>Choose what directory the autoreloader should look at. This directory is then considered the package root for puprposes of determining what package a file belongs to (and thus what directory to reload)</p>
+<p>This defaults to the <code class="docutils literal notranslate"><span class="pre">pytest</span></code> invocation directory, but you might need to point to another directory if you do things like splitting your code into <code class="docutils literal notranslate"><span class="pre">src</span></code> and <code class="docutils literal notranslate"><span class="pre">tests</span></code> (where <code class="docutils literal notranslate"><span class="pre">src</span></code> is the package root)</p>
+</div></blockquote>
+<div class="section" id="caveats-pytest-plugin">
+<h2>Caveats (Pytest plugin)<a class="headerlink" href="#caveats-pytest-plugin" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>Because the debugger needs to handle standard input, currently you always need to pass in <cite>-s</cite> when invoking pytest to avoid the default “capture standard input and output” behaviour of pytest.</p></li>
+<li><p>I have hit some issues with editing the test code itself (that is to say the actively running test class/test function rather than the application code). This requires a bit more investigation</p></li>
+<li><p>As always, when in doubt, tear down the entire program and restart</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Mighty Patcher</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage (Pytest plugin)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how.html">How It Works</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="usage.html" title="previous chapter">Usage</a></li>
+      <li>Next: <a href="api.html" title="next chapter">API Documentation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Raphael Gaschignard.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/plugin.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

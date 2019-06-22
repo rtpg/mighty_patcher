@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Usage &#8212; Mighty Patcher  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Usage (Pytest plugin)" href="plugin.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p>The base entry point is the <a class="reference internal" href="api.html#mighty_patcher.watch.AutoReloader" title="mighty_patcher.watch.AutoReloader"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoReloader</span></code></a> class. Before starting up your main program loop, instantiating an instance of this class will start a separate thread that watches for Python changes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">some_module.print</span> <span class="k">import</span> <span class="n">announce_double_time</span>
+<span class="kn">import</span> <span class="nn">some_module.math</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">sleep</span>
+
+<span class="kn">from</span> <span class="nn">mighty_patcher.watch</span> <span class="k">import</span> <span class="n">AutoReloader</span>
+
+<span class="n">reloader</span> <span class="o">=</span> <span class="n">AutoReloader</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;/path/to/my/project/src/&quot;</span>
+<span class="p">)</span>
+
+<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">double</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By default the reloader will print information related to errors on code reloading, but tries to be tolerant to errors so that your program doesn’t crash because you saved halfway through typing a file.</p>
+<p>The reloader path is considered a module root, and the relative path of modified python files are used to determine what module they represent:</p>
+<p>For example, here <code class="docutils literal notranslate"><span class="pre">&quot;/path/to/my/project/src/some_module/math.py&quot;</span></code> would map to <code class="docutils literal notranslate"><span class="pre">some_module.math</span></code></p>
+<p>Because of how modules work, this will mostly be what you want. But if your project has various lookup paths set up (for example if some code refers to the math module as <code class="docutils literal notranslate"><span class="pre">src.some_module.math</span></code>), then the file might not map over properly.</p>
+<div class="section" id="changing-behaviour-on-reload">
+<h2>Changing behaviour on reload<a class="headerlink" href="#changing-behaviour-on-reload" title="Permalink to this headline">¶</a></h2>
+<p>If you are working on something that has global state that you don’t want to have thrown away on every reload, you can modify what your code does depending on whether it’s the initial load of the code or whether you are reloading this code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some_file.py</span>
+<span class="kn">from</span> <span class="nn">mighty_patcher</span> <span class="k">import</span> <span class="n">currently_reloading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="c1"># this dictionary will get reset to an empty state</span>
+<span class="n">_my_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">currently_reloading</span><span class="p">():</span>
+    <span class="c1"># this will get run on the first import of this file, but not on subsequent reloads</span>
+    <span class="n">program_run_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">number_of_restarts</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">if</span> <span class="n">currently_reloading</span><span class="p">():</span>
+    <span class="c1"># this block will only run on reloads</span>
+    <span class="n">number_of_restarts</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reloaded!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="caveats">
+<h2>Caveats<a class="headerlink" href="#caveats" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Because of how the reloading works, some primitive data types (notably numeric datatypes) might not always reload in the expected way.</p></li>
+<li><p>If your code (or a third party library) uses a registry pattern and has some validation to make sure that (for example) you don’t declare two classes as having the same name, you can run into issues when reloading files.</p></li>
+<li><p>This is notably a problem  with Django and its ORM models. This isn’t a problem for the entire Django project, but files containing model definitions likely won’t reload properly.</p></li>
+<li><p>The main thing to remember is that this is changing stuff out from under CPython, and it’s not the expected execution model. Don’t use this on a long-running production server! Expect crashes and embrace them.</p></li>
+<li><p>Also the implementation currently has a memory leak proportional to the number of reloads going on in a single session (old versions of objects stick around forever). This problem is solvable but requires a bit of work on the internals</p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Mighty Patcher</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin.html">Usage (Pytest plugin)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how.html">How It Works</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="introduction.html" title="previous chapter">Introduction</a></li>
+      <li>Next: <a href="plugin.html" title="next chapter">Usage (Pytest plugin)</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Raphael Gaschignard.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/usage.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

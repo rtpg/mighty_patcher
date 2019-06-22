@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>How It Works &#8212; Mighty Patcher  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="API Documentation" href="api.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="how-it-works">
+<h1>How It Works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="whats-the-big-deal-don-t-i-already-have-importlib-reload">
+<h2>Whats the big deal? Don’t I already have <code class="docutils literal notranslate"><span class="pre">importlib.reload</span></code>?<a class="headerlink" href="#whats-the-big-deal-don-t-i-already-have-importlib-reload" title="Permalink to this headline">¶</a></h2>
+<p>Beyond setting up the file-watching infrastructure to trigger module reloads, this project offers much deeper code replacement abilities than other tools out there.</p>
+<p>The core issue with <code class="docutils literal notranslate"><span class="pre">importlib.reload</span></code> is a problem of <em>references</em>.</p>
+<p>Assuming you had the following project:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some_module/math.py</span>
+
+<span class="k">def</span> <span class="nf">double</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">2.1</span> <span class="o">*</span> <span class="n">n</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some_module/print.py</span>
+
+<span class="kn">from</span> <span class="nn">some_module.math</span> <span class="k">import</span> <span class="n">double</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">time</span>
+
+<span class="k">def</span> <span class="nf">announce_double_time</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">double</span><span class="p">(</span><span class="n">time</span><span class="p">()))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># main.py</span>
+<span class="kn">from</span> <span class="nn">some_module.print</span> <span class="k">import</span> <span class="n">announce_double_time</span>
+<span class="kn">import</span> <span class="nn">some_module.math</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">sleep</span>
+<span class="kn">from</span> <span class="nn">importlib</span> <span class="k">import</span> <span class="n">reload</span>
+
+<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">double</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># reload the math and try again</span>
+    <span class="n">reload</span><span class="p">(</span><span class="n">some_module</span><span class="o">.</span><span class="n">math</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here you could be working out the kinks of your module’s math and so write a reload loop specifically for it (already kinda annoying). Unfortunately if you write this, it <em>won’t reload the actual math usage</em></p>
+<p>When you reload the module you end up replacing the values within the module object. So in a sense you end up with <code class="docutils literal notranslate"><span class="pre">some_module.math.double</span> <span class="pre">=</span> <span class="pre">newly_loaded_double</span></code> running on each reload.</p>
+<p><em>But</em> inside your dependent module (<code class="docutils literal notranslate"><span class="pre">some_module.print</span></code>), you have a qualified import statement that gets executed once here:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">some_module.math</span> <span class="k">import</span> <span class="n">double</span>
+
+<span class="c1"># is roughly the same as</span>
+
+<span class="n">double</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s1">&#39;some_module.math&#39;</span><span class="p">][</span><span class="s1">&#39;double&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>So until you reload <code class="docutils literal notranslate"><span class="pre">some_module.print</span></code>, <em>its</em> refernce to <code class="docutils literal notranslate"><span class="pre">double</span></code> will always point to the original implementaion, no matter how many times you reload the source module.</p>
+<p>Here you can solve the problem by doing workarounds like:</p>
+<ul class="simple">
+<li><p>using module-qualified imports (<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">some_module</span> <span class="pre">import</span> <span class="pre">math</span></code> then <code class="docutils literal notranslate"><span class="pre">math.double</span></code>), since then you will point to the module, and classic module reloading actually just edits the module inplace</p></li>
+<li><p>making sure to reload dependencies properly. So “reload <cite>some_module.math</cite>, then reload <cite>some_module.print</cite>” (making sure to do things in the right order if you want to avoid a “stale reference” problem)</p></li>
+</ul>
+<p>But ultimately this leads you down the road of adapting how you write your code so you can be able to use a tool. It forces you to write things un-naturally</p>
+</div>
+<div class="section" id="how-the-mighty-patcher-avoids-reference-problems">
+<h2>How the Mighty Patcher avoids reference problems<a class="headerlink" href="#how-the-mighty-patcher-avoids-reference-problems" title="Permalink to this headline">¶</a></h2>
+<p>Even if importing in a function creates another reference to it, ultimately the reference is pointing to <em>the same function</em>.</p>
+<p>So when you first load the program you end up with the following memory layout:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">some_module</span><span class="o">.</span><span class="n">math</span><span class="p">]</span>  <span class="o">--</span><span class="s2">&quot;double&quot;</span> <span class="o">--&gt;</span> <span class="o">&lt;</span><span class="n">function</span> <span class="nb">object</span><span class="o">&gt;</span>
+<span class="c1">#                                    ^</span>
+<span class="c1">#                                    |</span>
+<span class="c1">#                                    |</span>
+<span class="p">[</span><span class="n">some_module</span><span class="o">.</span><span class="n">print</span><span class="p">]</span> <span class="o">--</span><span class="s2">&quot;double&quot;</span> <span class="o">------/</span>
+</pre></div>
+</div>
+<p>Classic module reloading will try to edit the modules to provide new definitions. But the Mighty Patcher instead opts to <em>replace the function object directly</em>, so that references are pointing to the correct object.</p>
+<p>This isn’t actually possible in pure Python, so this project has a built-in CPython extension to let us directly modify the function object, making sure that any reference to that function object will get the most up-to-date version of the object.</p>
+<p>There are a lot of details and gotchas around this technique, but for the most part this drastically reduces turnaround time for workflows that might otherwise require a lot of restarts</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Mighty Patcher</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin.html">Usage (Pytest plugin)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How It Works</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="api.html" title="previous chapter">API Documentation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Raphael Gaschignard.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/how.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
