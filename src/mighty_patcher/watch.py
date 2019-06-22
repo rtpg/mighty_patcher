@@ -40,6 +40,9 @@ def path_to_module(path: str):
         raise ValueError("Not a python module path ", path)
     path_minus_py = path[:-3]
     path_w_dots = path_minus_py.replace("/", ".")
+    # strip leading docs
+    if path_w_dots[0] == '.':
+        path_w_dots = path_w_dots[1:]
     # if there was an __init__ then strip that
     if path_w_dots[-9:] == ".__init__":
         path_w_dots = path_w_dots[:-9]
@@ -48,7 +51,7 @@ def path_to_module(path: str):
 
 class AutoReloader:
     """
-    An automatic code watcher and reloader. When a reloader is created, it watches the directory provided to it for file changes (in *.py files)
+    An automatic code watcher and reloader. When a reloader is created, it watches the directory provided to it for file changes (in ``*.py`` files)
 
     Once a change is detected, the reloader re-imports the related module and then does an in-place replacement of this module (so code dependent on
     the changes also begin pointing to the new code). 

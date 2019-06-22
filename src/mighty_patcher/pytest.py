@@ -22,10 +22,10 @@ def pytest_collection_modifyitems(session, config, items):
         session.auto_reloader = AutoReloader(path)
 
 
-@pytest.hookimpl(hookwrapper=True)
+@pytest.hookimpl(tryfirst=True)
 def pytest_pyfunc_call(pyfuncitem):
     if not pyfuncitem.config.option.reload_loop:
-        yield
+        return None
     else:
         testfunction = pyfuncitem.obj
         iscoroutinefunction = getattr(inspect, "iscoroutinefunction", None)
@@ -41,6 +41,7 @@ def pytest_pyfunc_call(pyfuncitem):
         testargs = {arg: funcargs[arg] for arg in pyfuncitem._fixtureinfo.argnames}
         passing = False
         while not passing:
+
             info = CallInfo.from_call(
                 lambda: testfunction(**testargs),
                 when="call",
@@ -58,4 +59,4 @@ def pytest_pyfunc_call(pyfuncitem):
                 passing = True
         # after you've successfully gotten the test to pass run it one more time
         # (this hack exists because of the hookwrapper logic)
-        yield
+        return info

@@ -100,15 +100,15 @@ The following options are made available when running pytest:
 
  - ``--reload-loop``
 
-   Running this flag starts an autoreloader when you start your tests. When you reach a test failure, you will be dropped into pdb to examine the error.
+ Running this flag starts an autoreloader when you start your tests. When you reach a test failure, you will be dropped into pdb to examine the error.
 
-   While you are in ``pdb`` mode, you can edit your project files and the autoreloader will install the new code. After you are confident that you have fixed the issue, you can leave the debugger with the ``c`` (continue) command and the test will be run again.
+ While you are in ``pdb`` mode, you can edit your project files and the autoreloader will install the new code. After you are confident that you have fixed the issue, you can leave the debugger with the ``c`` (continue) command and the test will be run again.
 
  - ``--reload-dir``
 
-   Choose what directory the autoreloader should look at. This directory is then considered the package root for puprposes of determining what package a file belongs to (and thus what directory to reload)
+ Choose what directory the autoreloader should look at. This directory is then considered the package root for puprposes of determining what package a file belongs to (and thus what directory to reload)
 
-   This defaults to the ``pytest`` invocation directory, but you might need to point to another directory if you do things like splitting your code into ``src`` and ``tests`` (where ``src`` is the package root)
+ This defaults to the ``pytest`` invocation directory, but you might need to point to another directory if you do things like splitting your code into ``src`` and ``tests`` (where ``src`` is the package root)
 
 
 -----------------------
